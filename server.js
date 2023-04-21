@@ -17,8 +17,11 @@ const server = http.createServer((req, res) => {
   
   const extname = path.extname(filePath);
   let contentType = 'text/html';
-  if (extname === '.js') contentType = 'text/javascript';
-  else if (extname === '.css') contentType = 'text/css';
+  if (extname === '.js') {
+    contentType = 'text/javascript';
+  } else if (extname === '.css') {
+    contentType = 'text/css';
+  }
 
   res.writeHead(200, { 'Content-Type': contentType });
   fs.createReadStream(`${__dirname}/${filePath}`, 'utf8').pipe(res);
@@ -29,7 +32,7 @@ const wsServer = new WebSocket.Server({ server });
 wsServer.on('connection', (socket) => {
   console.log('Client connected');
 
-  socket.on('message', async (data) => { // add async to support await in this function
+  socket.on('message', async (data) => {
     const { type, payload } = JSON.parse(data);
     switch(type) {
       case CLIENT.MESSAGE.NEW_USER:

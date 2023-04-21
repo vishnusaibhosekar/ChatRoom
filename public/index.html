@@ -15,8 +15,11 @@
   </div>
   <form id="messageForm">
     <input type="text" id="messageBox" placeholder="Type your message here" />
+    <input type="text" id="gifBox" placeholder="Type the gif URL here" />
     <button id="send" title="Send">➤</button>
-  </form>  
+    <button id="sendGif" title="Send Gif">🎞️</button>
+  </form> 
+  
   <script>
     let wsClient; 
     while(!username){
@@ -35,8 +38,7 @@
       messageBox.value = '';
       
       sendMessageToServer(message);
-    }
-    
+    }    
 
     function init() {
       
@@ -44,6 +46,19 @@
         wsClient.onerror = wsClient.onopen = wsClient.onclose = null;
         wsClient.close();
       }
+
+      const sendGifButton = document.querySelector('#sendGif');
+
+      sendGifButton.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const gifUrl = document.querySelector('#gifBox').value;
+
+        showMessageSent(gifUrl);
+        document.querySelector('#gifBox').value = '';
+
+        sendGifToServer(gifUrl);
+      });
       
       const URL = 'ws://localhost:' + PORT;
       wsClient = new WebSocket(URL);
@@ -69,6 +84,9 @@
           case CLIENT.MESSAGE.NEW_MESSAGE:
             showMessageReceived(`<strong>[${payload.username}]</strong> ${payload.message}`);
             break;
+          case CLIENT.MESSAGE.NEW_GIF:
+            showMessageReceived(`<strong>[${payload.username}]</strong><img src="${payload.gifUrl}" alt="Gif"/>`);
+            break;
           default:
             break;
         }
@@ -83,6 +101,20 @@
         console.error("WebSocket error observed:", event);
         wsClient = null;
       }
+    }
+
+    function sendGifToServer(gifUrl) {
+      if (!wsClient) {
+        showMessageReceived('No WebSocket connection :(');
+        return;
+      }
+
+      const data = {
+        type: CLIENT.MESSAGE.NEW_GIF,
+        payload: { gifUrl, username }
+      }
+
+      wsClient.send(JSON.stringify(data));
     }
 
     function sendMessageToServer(message) {
